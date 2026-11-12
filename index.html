@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TechStore - Cadastro</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --cor-primaria: #1B3A5C;
+            --cor-secundaria: #E07B2A;
+            --cor-fundo: #F5F0E8;
+            --cor-branco: #FFFFFF;
+            --cor-texto: #212121;
+            --cor-sucesso: #27AE60;
+            --cor-erro: #E74C3C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--cor-fundo);
+            font-family: 'Inter', sans-serif;
+            color: var(--cor-texto);
+        }
+
+        .container {
+            background: var(--cor-branco);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--cor-primaria);
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitulo {
+            color: #666;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .campo {
+            margin-bottom: 1.3rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #E0DDD5;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--cor-primaria);
+            box-shadow: 0 0 0 3px rgba(27, 58, 92, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.9rem;
+            background-color: var(--cor-secundaria);
+            color: var(--cor-branco);
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #C96A20;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .mensagem {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .sucesso {
+            background-color: #E8F8EF;
+            color: var(--cor-sucesso);
+        }
+
+        .erro {
+            background-color: #FDEDEC;
+            color: var(--cor-erro);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Cadastro TechStore</h1>
+        <p class="subtitulo">Cadastre-se para ofertas</p>
+
+        <form id="formCadastro">
+            <div class="campo">
+                <label for="nome">Nome Completo *</label>
+                <input
+                    type="text"
+                    id="nome"
+                    name="nome"
+                    placeholder="Ex: Maria da Silva"
+                    required
+                >
+            </div>
+
+            <div class="campo">
+                <label for="email">E-mail *</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Ex: maria@email.com"
+                    required
+                >
+            </div>
+
+            <div class="campo">
+                <label for="telefone">Telefone</label>
+                <input
+                    type="tel"
+                    id="telefone"
+                    name="telefone"
+                    placeholder="Ex: (11) 99999-9999"
+                >
+            </div>
+
+            <button type="submit" id="btnCadastrar">
+                Cadastrar
+            </button>
+        </form>
+
+        <div id="mensagem" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Biblioteca do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // Credenciais do Supabase
+        const SUPABASE_URL = "https://pzhjtktvhzpramvtxsfh.supabase.co";
+
+        const SUPABASE_ANON_KEY = "sb_publishable_8s5qeetvnDnoq0zfADYzCw_hotXm9uY";
+
+        // Criar conexão com o banco
+        const supabaseClient = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+        // Selecionar elementos HTML
+        const formulario = document.getElementById("formCadastro");
+        const botao = document.getElementById("btnCadastrar");
+        const mensagem = document.getElementById("mensagem");
+
+        let temporizadorMensagem;
+
+        // Função para exibir mensagens
+        function mostrarMensagem(texto, tipo) {
+            clearTimeout(temporizadorMensagem);
+
+            mensagem.textContent = texto;
+            mensagem.className = "mensagem " + tipo;
+
+            temporizadorMensagem = setTimeout(() => {
+                mensagem.textContent = "";
+                mensagem.className = "";
+            }, 5000);
+        }
+
+        // Capturar envio do formulário
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+
+            // Capturar valores dos campos
+            const nome = document.getElementById("nome").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const telefone = document.getElementById("telefone").value.trim();
+
+            // Validar campos obrigatórios
+            if (!nome || !email) {
+                mostrarMensagem(
+                    "Preencha os campos obrigatórios!",
+                    "erro"
+                );
+                return;
+            }
+
+            // Desabilitar botão durante o envio
+            botao.disabled = true;
+            botao.textContent = "Cadastrando...";
+
+            try {
+                // Inserir dados na tabela cadastros
+                const { error } = await supabaseClient
+                    .from("cadastros")
+                    .insert([
+                        {
+                            nome: nome,
+                            email: email,
+                            telefone: telefone || null
+                        }
+                    ]);
+
+                if (error) {
+                    throw error;
+                }
+
+                // Exibir mensagem de sucesso
+                mostrarMensagem(
+                    "Cadastro realizado com sucesso!",
+                    "sucesso"
+                );
+
+                // Limpar os campos
+                formulario.reset();
+
+            } catch (erro) {
+                console.error("Erro ao cadastrar:", erro);
+
+                mostrarMensagem(
+                    "Erro ao cadastrar. Tente novamente.",
+                    "erro"
+                );
+
+            } finally {
+                // Reativar botão
+                botao.disabled = false;
+                botao.textContent = "Cadastrar";
+            }
+        });
+    </script>
+</body>
+</html>
